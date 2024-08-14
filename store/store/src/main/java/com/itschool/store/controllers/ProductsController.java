@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.*;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.List;
@@ -36,25 +36,30 @@ public class ProductsController {
         return "products/index";
     }
 
+
     @GetMapping("/create")
     public String showCreatePage(Model model) {
-        ProductDto productDTO = new ProductDto();
-        model.addAttribute("product", productDTO);
+        ProductDto productDto = new ProductDto();
+        model.addAttribute("productDto", productDto);
         return "products/CreateProduct";
     }
+
 
     @PostMapping("/create")
     public String createProduct(
             @Valid @ModelAttribute ProductDto productDto,
             BindingResult result
     ) {
+
         if (productDto.getImageFile().isEmpty()) {
-            result.addError(new FieldError("productDto", "imageFile", "Image file is required"));
+            result.addError(new FieldError("productDto", "imageFile", "The image file is required"));
         }
+
 
         if (result.hasErrors()) {
             return "products/CreateProduct";
         }
+
 
         // save image file
         MultipartFile image = productDto.getImageFile();
@@ -73,15 +78,16 @@ public class ProductsController {
                 Files.copy(inputStream, Paths.get(uploadDir + storageFileName),
                         StandardCopyOption.REPLACE_EXISTING);
             }
-        }   catch (Exception ex) {
+        } catch (Exception ex) {
             System.out.println("Exception: " + ex.getMessage());
         }
+
 
         Product product = new Product();
         product.setName(productDto.getName());
         product.setBrand(productDto.getBrand());
         product.setCategory(productDto.getCategory());
-        product.setPrice(product.getPrice());
+        product.setPrice(productDto.getPrice());
         product.setDescription(productDto.getDescription());
         product.setCreatedAt(createdAt);
         product.setImageFileName(storageFileName);
@@ -92,31 +98,34 @@ public class ProductsController {
         return "redirect:/products";
     }
 
+
     @GetMapping("/edit")
     public String showEditPage(
             Model model,
             @RequestParam int id
-            ) {
+    ) {
 
         try {
             Product product = repo.findById(id).get();
             model.addAttribute("product", product);
 
-            ProductDto productDTO = new ProductDto();
-            productDTO.setName(product.getName());
-            productDTO.setBrand(product.getBrand());
-            productDTO.setCategory(product.getCategory());
-            productDTO.setPrice(product.getPrice());
-            productDTO.setDescription(product.getDescription());
 
-            model.addAttribute("productDto", productDTO);
-        }
-        catch(Exception ex) {
+            ProductDto productDto = new ProductDto();
+            productDto.setName(product.getName());
+            productDto.setBrand(product.getBrand());
+            productDto.setCategory(product.getCategory());
+            productDto.setPrice(product.getPrice());
+            productDto.setDescription(product.getDescription());
+
+            model.addAttribute("productDto", productDto);
+        } catch (Exception ex) {
             System.out.println("Exception: " + ex.getMessage());
             return "redirect:/products";
         }
+
         return "products/EditProduct";
     }
+
 
     @PostMapping("/edit")
     public String updateProduct(
@@ -124,7 +133,7 @@ public class ProductsController {
             @RequestParam int id,
             @Valid @ModelAttribute ProductDto productDto,
             BindingResult result
-            )   {
+    ) {
 
         try {
             Product product = repo.findById(id).get();
@@ -137,12 +146,11 @@ public class ProductsController {
             if (!productDto.getImageFile().isEmpty()) {
                 // delete old image
                 String uploadDir = "public/images/";
-                Path oldImagePath = Paths.get(uploadDir + productDto.getImageFile());
+                Path oldImagePath = Paths.get(uploadDir + product.getImageFileName());
 
                 try {
                     Files.delete(oldImagePath);
-                }
-                catch (Exception ex) {
+                } catch (Exception ex) {
                     System.out.println("Exception: " + ex.getMessage());
                 }
 
@@ -166,36 +174,36 @@ public class ProductsController {
             product.setDescription(productDto.getDescription());
 
             repo.save(product);
-        }
-        catch(Exception ex) {
+        } catch (Exception ex) {
             System.out.println("Exception: " + ex.getMessage());
         }
 
         return "redirect:/products";
     }
 
+
     @GetMapping("/delete")
     public String deleteProduct(
             @RequestParam int id
-            ) {
+    ) {
 
         try {
             Product product = repo.findById(id).get();
+
 
             // delete product image
             Path imagePath = Paths.get("public/images/" + product.getImageFileName());
 
             try {
                 Files.delete(imagePath);
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 System.out.println("Exception: " + ex.getMessage());
             }
 
+
             // delete the product
             repo.delete(product);
-        }
-        catch(Exception ex) {
+        } catch (Exception ex) {
             System.out.println("Exception: " + ex.getMessage());
         }
 

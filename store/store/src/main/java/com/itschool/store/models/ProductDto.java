@@ -1,9 +1,8 @@
 package com.itschool.store.models;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
 import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.validation.constraints.*;
 
 public class ProductDto {
     @NotEmpty(message = "The name is required")
@@ -12,7 +11,7 @@ public class ProductDto {
     @NotEmpty(message = "The brand is required")
     private String brand;
 
-    @NotEmpty(message = "The category is required")
+    @NotEmpty(message = "The name is required")
     private String category;
 
     @Min(0)
@@ -23,6 +22,9 @@ public class ProductDto {
     private String description;
 
     private MultipartFile imageFile;
+
+
+
 
     public String getName() {
         return name;
@@ -47,7 +49,6 @@ public class ProductDto {
     public void setCategory(String category) {
         this.category = category;
     }
-
 
     public double getPrice() {
         return price;
